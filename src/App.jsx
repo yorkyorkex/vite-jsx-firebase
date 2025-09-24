@@ -4,7 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import Auth from './components/auth.jsx'
 import { db } from './config/firebase.jsx'
-import { collection, getDocs, addDoc } from 'firebase/firestore'
+import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
 
 function App() {
   const [movieList, setMovieList] = useState([])
@@ -69,6 +69,18 @@ function App() {
       console.error('Error adding movie:', error)
     }
   }
+
+  const handleDeleteMovie = async (id) => {
+    console.log('Delete movie with id:', id)
+    try {
+      const movieRef = doc(db, 'movies', id)
+      await deleteDoc(movieRef)
+      getMovies()
+    } catch (error) {
+      console.error('Error deleting movie:', error)
+    }
+  }
+
   return (
     <div className="App">
       <Auth />
@@ -108,6 +120,9 @@ function App() {
               title : {movie.title} <br />
               receivedAnOscar : {movie.receivedAnOscar ? '有' : '沒有'} <br />
               releaseDate : {movie.releaseDate} <br />
+              <button onClick={() => handleDeleteMovie(movie.id)}>
+                Delete
+              </button>
             </li>
           ))}
         </ul>
