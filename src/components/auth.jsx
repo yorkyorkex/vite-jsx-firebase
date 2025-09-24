@@ -1,23 +1,34 @@
 import React from 'react'
-import { auth } from '../config/firebase.jsx'
+import { auth, googleProvider } from '../config/firebase.jsx'
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  signInWithPopup,
 } from 'firebase/auth'
 import { useState } from 'react'
-
-const handleLogout = async () => {
-  try {
-    await signOut(auth)
-  } catch (error) {
-    console.error('Error logging out:', error)
-  }
-}
 
 export const Auth = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider)
+      alert('Google 登入成功！')
+    } catch (error) {
+      console.error('Error logging in with Google:', error)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      alert('登出成功！')
+    } catch (error) {
+      console.error('Error logging out:', error)
+    }
+  }
 
   const handleSignup = async () => {
     try {
@@ -110,6 +121,7 @@ export const Auth = () => {
       <button onClick={handleLogin}>Login</button>
       <button onClick={handleSignup}>Signup</button>
       <button onClick={handleLogout}>Logout</button>
+      <button onClick={handleGoogleLogin}>Login with Google</button>
     </div>
   )
 }
