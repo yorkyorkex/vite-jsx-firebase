@@ -4,7 +4,14 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import Auth from './components/auth.jsx'
 import { db } from './config/firebase.jsx'
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from 'firebase/firestore'
 
 function App() {
   const [movieList, setMovieList] = useState([])
@@ -13,6 +20,8 @@ function App() {
     releaseDate: '',
     receivedAnOscar: false,
   })
+  const [editingMovie, setEditingMovie] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
 
   useEffect(() => {
     getMovies()
@@ -80,6 +89,28 @@ function App() {
       console.error('Error deleting movie:', error)
     }
   }
+  const handleStartEdit = (movie) => {
+    setEditingMovie(movie.id)
+    setEditTitle(movie.title)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingMovie(null)
+    setEditTitle('')
+  }
+
+  const handleUpdateMovie = async (id) => {
+    console.log('Update movie with id:', id, 'to new title:', editTitle)
+    try {
+      const movieRef = doc(db, 'movies', id)
+      await updateDoc(movieRef, { title: editTitle })
+      setEditingMovie(null)
+      setEditTitle('')
+      getMovies()
+    } catch (error) {
+      console.error('Error updating movie:', error)
+    }
+  }
 
   return (
     <div className="App">
@@ -123,6 +154,22 @@ function App() {
               <button onClick={() => handleDeleteMovie(movie.id)}>
                 Delete
               </button>
+              {editingMovie === movie.id ? (
+                <div>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                  />
+                  <button onClick={() => handleUpdateMovie(movie.id)}>
+                    Save
+                  </button>
+                  <button onClick={handleCancelEdit}>Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => handleStartEdit(movie)}>Edit</button>
+              )}
+              <hr />
             </li>
           ))}
         </ul>
