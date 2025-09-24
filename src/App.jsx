@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Auth from './components/auth.jsx'
-import { db } from './config/firebase.jsx'
+import { db, auth } from './config/firebase.jsx'
 import {
   collection,
   getDocs,
@@ -19,6 +19,7 @@ function App() {
     title: '',
     releaseDate: '',
     receivedAnOscar: false,
+    userId: null,
   })
   const [editingMovie, setEditingMovie] = useState(null)
   const [editTitle, setEditTitle] = useState('')
@@ -60,12 +61,17 @@ function App() {
     })
   } */
   const handleAddMovie = async () => {
-    console.log('Add movie:', newMovie)
+    // 動態設置當前用戶的 ID
+    const movieToAdd = {
+      ...newMovie,
+      userId: auth?.currentUser?.uid,
+    }
+    console.log('Add movie:', movieToAdd)
     try {
       // 1. reference (參考資料)
       const moviesRef = collection(db, 'movies')
       // 2. add document (新增文件)
-      await addDoc(moviesRef, newMovie)
+      await addDoc(moviesRef, movieToAdd)
 
       getMovies()
       // 5. clear input (清空輸入框)
@@ -73,6 +79,7 @@ function App() {
         title: '',
         releaseDate: '',
         receivedAnOscar: false,
+        userId: null, // 保持為 null，在添加時動態設置
       })
     } catch (error) {
       console.error('Error adding movie:', error)
