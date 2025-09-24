@@ -1,15 +1,117 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Auth from './components/auth.jsx'
+import { db } from './config/firebase.jsx'
+import { collection, getDocs, addDoc } from 'firebase/firestore'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [movieList, setMovieList] = useState([])
+  const [newMovie, setNewMovie] = useState({
+    title: '',
+    releaseDate: '',
+    receivedAnOscar: false,
+  })
 
+  useEffect(() => {
+    getMovies()
+  }, [])
+  const getMovies = async () => {
+    // 1. reference (參考資料)
+    const moviesRef = collection(db, 'movies')
+    // 2. get collection data (取得資料)
+    try {
+      const snapshot = await getDocs(moviesRef)
+      const movies = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      // 3. set to state (設定到 state)
+      setMovieList(movies)
+      console.log(movies)
+    } catch (error) {
+      console.error('Error getting movies:', error)
+    }
+  }
+
+  /*   const handleAddMovie = async () => {
+    console.log('Add movie:', newMovie)
+    // 1. reference (參考資料)
+    const moviesRef = collection(db, 'movies')
+    // 2. add document (新增文件)
+    await addDoc(moviesRef, newMovie)
+    // 3. get collection data (取得資料)
+    const snapshot = await getDocs(moviesRef)
+    const movies = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    // 4. set to state (設定到 state)
+    setMovieList(movies)
+    // 5. clear input (清空輸入框)
+    setNewMovie({
+      title: '',
+      releaseDate: '',
+      receivedAnOscar: false,
+    })
+  } */
+  const handleAddMovie = async () => {
+    console.log('Add movie:', newMovie)
+    try {
+      // 1. reference (參考資料)
+      const moviesRef = collection(db, 'movies')
+      // 2. add document (新增文件)
+      await addDoc(moviesRef, newMovie)
+
+      getMovies()
+      // 5. clear input (清空輸入框)
+      setNewMovie({
+        title: '',
+        releaseDate: '',
+        receivedAnOscar: false,
+      })
+    } catch (error) {
+      console.error('Error adding movie:', error)
+    }
+  }
   return (
     <div className="App">
       <Auth />
+      <div>
+        <input
+          type="text"
+          placeholder="Movie Title"
+          value={newMovie.title}
+          onChange={(e) => setNewMovie({ ...newMovie, title: e.target.value })}
+        />
+        <input
+          type="text"
+          placeholder="Release Date"
+          value={newMovie.releaseDate}
+          onChange={(e) =>
+            setNewMovie({ ...newMovie, releaseDate: e.target.value })
+          }
+        />
+        <label>
+          <input
+            type="checkbox"
+            checked={newMovie.receivedAnOscar}
+            onChange={(e) =>
+              setNewMovie({ ...newMovie, receivedAnOscar: e.target.checked })
+            }
+          />
+          Received an Oscar
+        </label>
+        <button onClick={handleAddMovie}>Add Movie</button>
+      </div>
+      <div>
+        <h2>電影列表</h2>
+        <ul>
+          {movieList.map((movie) => (
+            <li key={movie.id}>
+              id : {movie.id} <br />
+              title : {movie.title} <br />
+              receivedAnOscar : {movie.receivedAnOscar ? '有' : '沒有'} <br />
+              releaseDate : {movie.releaseDate} <br />
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }
