@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Auth from './components/auth.jsx'
-import { db, auth } from './config/firebase.jsx'
+import { db, auth, storage } from './config/firebase.jsx'
 import {
   collection,
   getDocs,
@@ -12,6 +12,7 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 function App() {
   const [movieList, setMovieList] = useState([])
@@ -23,6 +24,7 @@ function App() {
   })
   const [editingMovie, setEditingMovie] = useState(null)
   const [editTitle, setEditTitle] = useState('')
+  const [fileUpload, setFileUpload] = useState(null)
 
   useEffect(() => {
     getMovies()
@@ -119,6 +121,27 @@ function App() {
     }
   }
 
+  const handleFileUpload = async () => {
+    if (!fileUpload) {
+      alert('select a file first!')
+      return
+    }
+    // 1. reference (參考資料)
+    const storageRef = storage.ref()
+    const fileRef = storageRef.child(fileUpload.name)
+    try {
+      // 2. upload file (上傳檔案)
+      await fileRef.put(fileUpload)
+      // 3. get download URL (取得下載 URL)
+      const downloadURL = await fileRef.getDownloadURL()
+      alert(`檔案上傳成功！下載 URL: ${downloadURL}`)
+      setFileUpload(null)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      alert('file upload failed!')
+    }
+  }
+
   return (
     <div className="App">
       <Auth />
@@ -180,6 +203,11 @@ function App() {
             </li>
           ))}
         </ul>
+      </div>
+      <div>
+        <h2>檔案上傳</h2>
+        <input type="file" onChange={(e) => setFileUpload(e.target.files[0])} />
+        <button onClick={handleFileUpload}>Upload File</button>
       </div>
     </div>
   )
